@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +30,7 @@ public class DelayingQueueService implements InitializingBean {
 
     @Resource
     private RedisTemplate redisTemplate;
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
 
     /**
      * 可以不同业务用不同的key
@@ -104,19 +106,42 @@ public class DelayingQueueService implements InitializingBean {
         new Thread() {
             @Override
             public void run() {
+                int selectCnt = 0;
+
                 while (true) {
+                    long currentTimeNanos = System.nanoTime();
+
                     Message pull = pop();
 
                     System.out.println("拉取的数据 " + pull);
+                    selectCnt++;
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    // deadline 以及任务穿插逻辑处理
+                    long timeoutMillis = 2;
+
+                    // 解决空轮询问题
+                    long time = System.nanoTime();
+                    System.out.println( time +" -- "+ (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis)) + "--" + currentTimeNanos);
+                    // 当前时间减去阻塞使用的时间  >= 上面的当前时间
+                    if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
+                        selectCnt = 1;
+                    } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
+                        // 如果空轮询次数大于等于SELECTOR_AUTO_REBUILD_THRESHOLD 默认512
+                        selectCnt = 1;
+                        reSleep();
                     }
+
                 }
             }
         }.start();
+    }
 
+    private void reSleep(){
+        try {
+            System.out.println("睡眠了");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
