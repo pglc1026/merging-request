@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.springboot.sample.bean.Message;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +33,8 @@ public class DelayingQueueService implements InitializingBean {
     /**
      * 可以不同业务用不同的key
      */
-    public static final String QUEUE_NAME = "message:queue";
+    @Value("${redisQueue.name}")
+    public static final String queueName = "redis_queue";
 
 
     /**
@@ -43,7 +44,7 @@ public class DelayingQueueService implements InitializingBean {
      * @return
      */
     public Boolean push(Message message) throws JsonProcessingException {
-        Boolean addFlag = redisTemplate.opsForZSet().add(QUEUE_NAME, mapper.writeValueAsString(message), message.getDelayTime());
+        Boolean addFlag = redisTemplate.opsForZSet().add(queueName, mapper.writeValueAsString(message), message.getDelayTime());
         return addFlag;
     }
 
@@ -56,7 +57,7 @@ public class DelayingQueueService implements InitializingBean {
     public Boolean remove(Message message) {
         Long remove = 0L;
         try {
-            remove = redisTemplate.opsForZSet().remove(QUEUE_NAME, mapper.writeValueAsString(message));
+            remove = redisTemplate.opsForZSet().remove(queueName, mapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -71,8 +72,8 @@ public class DelayingQueueService implements InitializingBean {
      *
      * @return
      */
-    public List<Message> pull() {
-        Set<String> strings = redisTemplate.opsForZSet().rangeByScore(QUEUE_NAME, 0, System.currentTimeMillis());
+    public Message pop() {
+        Set<String> strings = redisTemplate.opsForZSet().rangeByScore(queueName, 0, System.currentTimeMillis());
         if (strings == null) {
             return null;
         }
@@ -89,12 +90,12 @@ public class DelayingQueueService implements InitializingBean {
         }).collect(Collectors.toList());
 
         // 有可能是集群，多个节点，设置抢占
-        msgList.forEach(val -> {
-            if (remove(val)) { // 为true 表示抢占到了
-
+        for (Message message : msgList) {
+            if (remove(message)) { // 为true 表示抢占到了
+                return message;
             }
-        });
-        return msgList;
+        }
+        return null;
     }
 
 
@@ -104,13 +105,10 @@ public class DelayingQueueService implements InitializingBean {
             @Override
             public void run() {
                 while (true) {
-                    List<Message> pull = pull();
+                    Message pull = pop();
 
                     System.out.println("拉取的数据 " + pull);
-                    pull.forEach(v -> {
-                        Boolean remove = remove(v);
-                        System.out.println("删除是否成功 " + remove);
-                    });
+
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {

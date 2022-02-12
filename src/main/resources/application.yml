@@ -8,3 +8,6 @@ spring:
     # redis有16个库 默认选择第0个使用
     database: 0
     password: root
+
+redisQueue:
+  name: redis_queue
