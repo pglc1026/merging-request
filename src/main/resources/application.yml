@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    # redis有16个库 默认选择第0个使用
+    database: 0
+    password: root
