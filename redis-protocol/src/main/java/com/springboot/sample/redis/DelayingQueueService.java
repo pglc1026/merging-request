@@ -5,12 +5,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.springboot.sample.bean.RedisQueueMessage;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
@@ -18,23 +20,28 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * @description: 延时队列功能类
- * @author: smalljop
- * @create: 2020-01-03 10:11
- **/
+/***
+ * zzq
+ * 2022年2月13日13:39:34
+ * 延迟队列
+ * */
 @Component
-public class DelayingQueueService implements InitializingBean {
+public class DelayingQueueService implements InitializingBean,DisposableBean {
 
     private static ObjectMapper mapper = Jackson2ObjectMapperBuilder.json().build();
+
+    /** 是否销毁标记 volatile 保证可见性 **/
+    private volatile boolean destroyFlag = false;
 
     @Resource
     private RedisTemplate redisTemplate;
 
+    // 设定空轮询最大次数
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
 
     // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是2毫秒
     private long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
+
     /**
      * 可以不同业务用不同的key
      */
@@ -106,12 +113,12 @@ public class DelayingQueueService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Thread thread = new Thread() {
+        Thread thread = new Thread("loop-redis-queue") {
             @Override
             public void run() {
                 int selectCnt = 0;
 
-                while (true) {
+                while (!Thread.interrupted() && !destroyFlag) {
                     long currentTimeNanos = System.nanoTime();
 
                     RedisQueueMessage pull = pop();
@@ -133,7 +140,6 @@ public class DelayingQueueService implements InitializingBean {
                         selectCnt = 1;
                         threadSleep();
                     }
-
                 }
             }
         };
@@ -149,4 +155,14 @@ public class DelayingQueueService implements InitializingBean {
             e.printStackTrace();
         }
     }
+
+
+    @PreDestroy
+    public void destroy() throws Exception {
+        System.out.println("应用程序已关闭");
+        this.destroyFlag = true;
+    }
+
+
+
 }
