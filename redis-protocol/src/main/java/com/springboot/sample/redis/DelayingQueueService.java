@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * 延迟队列
  * */
 @Component
-public class DelayingQueueService implements InitializingBean,DisposableBean {
+public class DelayingQueueService implements InitializingBean {
 
     private static ObjectMapper mapper = Jackson2ObjectMapperBuilder.json().build();
 
