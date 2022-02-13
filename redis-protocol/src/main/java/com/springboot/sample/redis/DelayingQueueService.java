@@ -4,7 +4,7 @@ package com.springboot.sample.redis;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.springboot.sample.bean.Message;
+import com.springboot.sample.bean.RedisQueueMessage;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,10 +31,10 @@ public class DelayingQueueService implements InitializingBean {
     @Resource
     private RedisTemplate redisTemplate;
 
-    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 1;
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
 
     // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是2毫秒
-    private  long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
+    private long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
     /**
      * 可以不同业务用不同的key
      */
@@ -45,24 +45,24 @@ public class DelayingQueueService implements InitializingBean {
     /**
      * 插入消息
      *
-     * @param message
+     * @param redisQueueMessage
      * @return
      */
-    public Boolean push(Message message) throws JsonProcessingException {
-        Boolean addFlag = redisTemplate.opsForZSet().add(queueName, mapper.writeValueAsString(message), message.getDelayTime());
+    public Boolean push(RedisQueueMessage redisQueueMessage) throws JsonProcessingException {
+        Boolean addFlag = redisTemplate.opsForZSet().add(queueName, mapper.writeValueAsString(redisQueueMessage), redisQueueMessage.getDelayTime());
         return addFlag;
     }
 
     /**
      * 移除消息
      *
-     * @param message
+     * @param redisQueueMessage
      * @return
      */
-    public Boolean remove(Message message) {
+    public Boolean remove(RedisQueueMessage redisQueueMessage) {
         Long remove = 0L;
         try {
-            remove = redisTemplate.opsForZSet().remove(queueName, mapper.writeValueAsString(message));
+            remove = redisTemplate.opsForZSet().remove(queueName, mapper.writeValueAsString(redisQueueMessage));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -77,27 +77,27 @@ public class DelayingQueueService implements InitializingBean {
      *
      * @return
      */
-    public Message pop() {
+    public RedisQueueMessage pop() {
         Set<String> strings = redisTemplate.opsForZSet().rangeByScore(queueName, 0, System.currentTimeMillis());
         if (strings == null) {
             return null;
         }
-        List<Message> msgList = strings.stream().map(msg -> {
-            Message message = null;
+        List<RedisQueueMessage> msgList = strings.stream().map(msg -> {
+            RedisQueueMessage redisQueueMessage = null;
             try {
-                message = mapper.readValue(msg, Message.class);
+                redisQueueMessage = mapper.readValue(msg, RedisQueueMessage.class);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return message;
+            return redisQueueMessage;
         }).collect(Collectors.toList());
 
         // 有可能是集群，多个节点，设置抢占
-        for (Message message : msgList) {
-            if (remove(message)) { // 为true 表示抢占到了
-                return message;
+        for (RedisQueueMessage redisQueueMessage : msgList) {
+            if (remove(redisQueueMessage)) { // 为true 表示抢占到了
+                return redisQueueMessage;
             }
         }
         return null;
@@ -114,7 +114,7 @@ public class DelayingQueueService implements InitializingBean {
                 while (true) {
                     long currentTimeNanos = System.nanoTime();
 
-                    Message pull = pop();
+                    RedisQueueMessage pull = pop();
 
                     System.out.println("拉取的数据 " + pull);
                     selectCnt++;
@@ -141,7 +141,7 @@ public class DelayingQueueService implements InitializingBean {
         thread.start();
     }
 
-    private void threadSleep(){
+    private void threadSleep() {
         try {
             System.out.println("睡眠了");
             Thread.sleep(1000);

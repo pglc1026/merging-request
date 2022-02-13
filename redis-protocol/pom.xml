@@ -9,9 +9,9 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<groupId>com.springboot.sample</groupId>
-	<artifactId>sample</artifactId>
+	<artifactId>redis-protocol</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>sample</name>
+	<name>redis-protocol</name>
 	<description>Spring Boot Sample</description>
 	<packaging>jar</packaging>
 
@@ -73,11 +73,6 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>com.springboot.sample</groupId>
-			<artifactId>redis-protocol</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 
 	<build>

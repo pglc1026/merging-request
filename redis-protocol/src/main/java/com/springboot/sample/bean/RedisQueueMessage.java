@@ -2,21 +2,21 @@ package com.springboot.sample.bean;
 
 import java.time.LocalDateTime;
 
-/**
- * @description: 消息统一封装类
- * @author: smalljop
- * @create: 2020-01-03 10:20
- **/
-public class Message {
+/***
+ * zzq
+ * 2022年2月13日13:35:29
+ * redis队列消息
+ * */
+public class RedisQueueMessage {
     /**
      * 消息唯一标识
      */
     private String id;
     /**
-     * 消息渠道 如 订单 支付 代表不同业务类型
+     * 消息的分类 传入Spring BeanName
      * 为消费时不同类去处理
      */
-    private String channel;
+    private String beanName;
     /**
      * 具体消息 json
      */
@@ -40,12 +40,12 @@ public class Message {
         this.id = id;
     }
 
-    public String getChannel() {
-        return channel;
+    public String getBeanName() {
+        return beanName;
     }
 
-    public void setChannel(String channel) {
-        this.channel = channel;
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
     }
 
     public String getBody() {
@@ -76,7 +76,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "id='" + id + '\'' +
-                ", channel='" + channel + '\'' +
+                ", channel='" + beanName + '\'' +
                 ", body='" + body + '\'' +
                 ", delayTime=" + delayTime +
                 ", createTime=" + createTime +

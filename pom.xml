@@ -12,6 +12,7 @@
 
 	<modules>
 		<module>sample</module>
+		<module>redis-protocol</module>
 	</modules>
 
 	<properties>

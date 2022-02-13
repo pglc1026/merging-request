@@ -1,17 +1,14 @@
 package com.springboot.sample.controller;
 
-import com.springboot.sample.bean.Message;
+import com.springboot.sample.bean.RedisQueueMessage;
 import com.springboot.sample.redis.DelayingQueueService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.UUID;
 
 @RestController
@@ -33,16 +30,16 @@ public class RedisController {
         try {
             if (msg != null) {
                 String seqId = UUID.randomUUID().toString();
-                Message message = new Message();
+                RedisQueueMessage redisQueueMessage = new RedisQueueMessage();
                 //时间戳默认为毫秒 延迟5s即为 5*1000
                 long time = System.currentTimeMillis();
                 LocalDateTime dateTime = Instant.ofEpochMilli(time).atZone(ZoneOffset.ofHours(8)).toLocalDateTime();
-                message.setDelayTime(time +  (delay * 1000));
-                message.setCreateTime(dateTime);
-                message.setBody(msg);
-                message.setId(seqId);
-                message.setChannel(USER_CHANNEL);
-                delayingQueueService.push(message);
+                redisQueueMessage.setDelayTime(time +  (delay * 1000));
+                redisQueueMessage.setCreateTime(dateTime);
+                redisQueueMessage.setBody(msg);
+                redisQueueMessage.setId(seqId);
+                redisQueueMessage.setBeanName(USER_CHANNEL);
+                delayingQueueService.push(redisQueueMessage);
             }
         } catch (Exception e) {
             e.printStackTrace();
