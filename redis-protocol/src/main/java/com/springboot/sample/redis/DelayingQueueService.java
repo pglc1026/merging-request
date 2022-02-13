@@ -5,12 +5,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.springboot.sample.bean.RedisQueueMessage;
-import org.springframework.beans.factory.DisposableBean;
+import com.springboot.sample.redis.process.RedisQueueProcessService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -34,7 +36,10 @@ public class DelayingQueueService implements InitializingBean {
     private volatile boolean destroyFlag = false;
 
     @Resource
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private ApplicationContext applicationContext;
 
     // 设定空轮询最大次数
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
@@ -46,7 +51,7 @@ public class DelayingQueueService implements InitializingBean {
      * 可以不同业务用不同的key
      */
     @Value("${redisQueue.name}")
-    public static final String queueName = "redis_queue";
+    public String queueName;
 
 
     /**
@@ -55,8 +60,13 @@ public class DelayingQueueService implements InitializingBean {
      * @param redisQueueMessage
      * @return
      */
-    public Boolean push(RedisQueueMessage redisQueueMessage) throws JsonProcessingException {
-        Boolean addFlag = redisTemplate.opsForZSet().add(queueName, mapper.writeValueAsString(redisQueueMessage), redisQueueMessage.getDelayTime());
+    public Boolean push(RedisQueueMessage redisQueueMessage)  {
+        Boolean addFlag = null;
+        try {
+            addFlag = stringRedisTemplate.opsForZSet().add(queueName, mapper.writeValueAsString(redisQueueMessage), redisQueueMessage.getDelayTime());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return addFlag;
     }
 
@@ -69,7 +79,7 @@ public class DelayingQueueService implements InitializingBean {
     public Boolean remove(RedisQueueMessage redisQueueMessage) {
         Long remove = 0L;
         try {
-            remove = redisTemplate.opsForZSet().remove(queueName, mapper.writeValueAsString(redisQueueMessage));
+            remove = stringRedisTemplate.opsForZSet().remove(queueName, mapper.writeValueAsString(redisQueueMessage));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -85,7 +95,7 @@ public class DelayingQueueService implements InitializingBean {
      * @return
      */
     public RedisQueueMessage pop() {
-        Set<String> strings = redisTemplate.opsForZSet().rangeByScore(queueName, 0, System.currentTimeMillis());
+        Set<String> strings = stringRedisTemplate.opsForZSet().rangeByScore(queueName, 0, System.currentTimeMillis());
         if (strings == null) {
             return null;
         }
@@ -121,9 +131,16 @@ public class DelayingQueueService implements InitializingBean {
                 while (!Thread.interrupted() && !destroyFlag) {
                     long currentTimeNanos = System.nanoTime();
 
-                    RedisQueueMessage pull = pop();
-
-                    System.out.println("拉取的数据 " + pull);
+                    RedisQueueMessage redisQueueMessage = pop();
+                    System.out.println("拉取的数据 " + redisQueueMessage);
+                    if (!StringUtils.isEmpty(redisQueueMessage)) {
+                        try {
+                            RedisQueueProcessService redisQueueProcessService = adapterHandler(redisQueueMessage.getBeanName());
+                            redisQueueProcessService.handler(redisQueueMessage);
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
                     selectCnt++;
 
 
@@ -145,6 +162,10 @@ public class DelayingQueueService implements InitializingBean {
         };
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private RedisQueueProcessService adapterHandler(String beanName) {
+       return applicationContext.getBean(beanName, RedisQueueProcessService.class);
     }
 
     private void threadSleep() {

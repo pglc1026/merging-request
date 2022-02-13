@@ -10,4 +10,4 @@ spring:
     password: root
 
 redisQueue:
-  name: redis_queue
+  name: redis:queue

@@ -1,6 +1,6 @@
 package com.springboot.sample.bean;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /***
  * zzq
@@ -30,7 +30,7 @@ public class RedisQueueMessage {
     /**
      * 创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
 
     public String getId() {
         return id;
@@ -64,11 +64,11 @@ public class RedisQueueMessage {
         this.delayTime = delayTime;
     }
 
-    public LocalDateTime getCreateTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(LocalDateTime createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 

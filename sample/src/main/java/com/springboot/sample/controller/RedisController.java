@@ -9,13 +9,14 @@ import javax.annotation.Resource;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/redis")
 public class RedisController {
 
-    private static String USER_CHANNEL = "USER_CHANNEL";
+    private static final String beanName = "sampleRedisQueueProcessServiceImpl";
 
     @Resource
     private DelayingQueueService delayingQueueService;
@@ -35,10 +36,10 @@ public class RedisController {
                 long time = System.currentTimeMillis();
                 LocalDateTime dateTime = Instant.ofEpochMilli(time).atZone(ZoneOffset.ofHours(8)).toLocalDateTime();
                 redisQueueMessage.setDelayTime(time +  (delay * 1000));
-                redisQueueMessage.setCreateTime(dateTime);
+                redisQueueMessage.setCreateTime(new Date());
                 redisQueueMessage.setBody(msg);
                 redisQueueMessage.setId(seqId);
-                redisQueueMessage.setBeanName(USER_CHANNEL);
+                redisQueueMessage.setBeanName(beanName);
                 delayingQueueService.push(redisQueueMessage);
             }
         } catch (Exception e) {
