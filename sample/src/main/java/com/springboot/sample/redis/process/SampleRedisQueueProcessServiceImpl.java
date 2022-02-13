@@ -19,12 +19,6 @@ public class SampleRedisQueueProcessServiceImpl extends AbstractRedisQueueProces
 
     @Override
     protected RedisQueueProcessResp doHandler(RedisQueueMessage redisQueueMessage) {
-        return null;
-    }
-
-    @Override
-    @Transactional
-    public RedisQueueProcessResp handler(RedisQueueMessage redisQueueMessage) {
         System.out.println("消费到数据 " + redisQueueMessage);
 //                int a = 1 / 0;
         Users entity = new Users();
