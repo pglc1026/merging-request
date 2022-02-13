@@ -30,8 +30,11 @@ public class DelayingQueueService implements InitializingBean {
 
     @Resource
     private RedisTemplate redisTemplate;
-    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
 
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 1;
+
+    // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是2毫秒
+    private  long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
     /**
      * 可以不同业务用不同的key
      */
@@ -103,7 +106,7 @@ public class DelayingQueueService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        new Thread() {
+        Thread thread = new Thread() {
             @Override
             public void run() {
                 int selectCnt = 0;
@@ -116,27 +119,29 @@ public class DelayingQueueService implements InitializingBean {
                     System.out.println("拉取的数据 " + pull);
                     selectCnt++;
 
-                    // deadline 以及任务穿插逻辑处理
-                    long timeoutMillis = 2;
 
                     // 解决空轮询问题
                     long time = System.nanoTime();
-                    System.out.println( time +" -- "+ (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis)) + "--" + currentTimeNanos);
+                    System.out.println("执行纳秒数" + (time - currentTimeNanos));
+                    System.out.println(time + " -- " + (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis)) + "--" + currentTimeNanos);
                     // 当前时间减去阻塞使用的时间  >= 上面的当前时间
-                    if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
+                    if (time - timeoutMillis >= currentTimeNanos) {
+                        // 有效的轮询
                         selectCnt = 1;
                     } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
                         // 如果空轮询次数大于等于SELECTOR_AUTO_REBUILD_THRESHOLD 默认512
                         selectCnt = 1;
-                        reSleep();
+                        threadSleep();
                     }
 
                 }
             }
-        }.start();
+        };
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    private void reSleep(){
+    private void threadSleep(){
         try {
             System.out.println("睡眠了");
             Thread.sleep(1000);
