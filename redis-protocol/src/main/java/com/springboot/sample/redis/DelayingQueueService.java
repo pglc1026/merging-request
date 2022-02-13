@@ -44,10 +44,10 @@ public class DelayingQueueService implements InitializingBean {
     private ApplicationContext applicationContext;
 
     // 设定空轮询最大次数
-    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 1;
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
 
-    // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是2毫秒
-    private long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
+    // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是5毫秒
+    private long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(5);
 
     /**
      * 可以不同业务用不同的key
@@ -170,15 +170,15 @@ public class DelayingQueueService implements InitializingBean {
 
     private void invokeHandler(RedisQueueMessage redisQueueMessage, RedisQueueProcessService redisQueueProcessService) {
         RedisQueueProcessResp result = null;
-     //   try {
+        try {
             result =  redisQueueProcessService.handler(redisQueueMessage);
-          //  ifFailAgainAddQueue(redisQueueMessage, result);
-       // } catch (Exception e) {
+            ifFailAgainAddQueue(redisQueueMessage, result);
+        } catch (Exception e) {
             // 执行出现异常重新加入队列
-           // push(redisQueueMessage);
+            push(redisQueueMessage);
             System.out.println("执行业务代码程序异常");
-          //  throw new RuntimeException("执行业务代码异常");
-     //   }
+            throw new RuntimeException("执行业务代码异常");
+        }
     }
 
     protected void ifFailAgainAddQueue(RedisQueueMessage redisQueueMessage, RedisQueueProcessResp result) {
