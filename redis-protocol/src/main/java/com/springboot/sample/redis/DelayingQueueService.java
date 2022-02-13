@@ -5,11 +5,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.springboot.sample.bean.RedisQueueMessage;
+import com.springboot.sample.bean.RedisQueueProcessResp;
 import com.springboot.sample.redis.process.RedisQueueProcessService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -42,7 +44,7 @@ public class DelayingQueueService implements InitializingBean {
     private ApplicationContext applicationContext;
 
     // 设定空轮询最大次数
-    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 512;
+    private static final int SELECTOR_AUTO_REBUILD_THRESHOLD = 1;
 
     // deadline 以及任务穿插逻辑处理  ，业务处理事件可能是2毫秒
     private long timeoutMillis = TimeUnit.MILLISECONDS.toNanos(2);
@@ -136,7 +138,9 @@ public class DelayingQueueService implements InitializingBean {
                     if (!StringUtils.isEmpty(redisQueueMessage)) {
                         try {
                             RedisQueueProcessService redisQueueProcessService = adapterHandler(redisQueueMessage.getBeanName());
-                            redisQueueProcessService.handler(redisQueueMessage);
+
+                            invokeHandler(redisQueueMessage,redisQueueProcessService);
+
                         }catch (Exception e){
                             e.printStackTrace();
                         }
@@ -163,6 +167,27 @@ public class DelayingQueueService implements InitializingBean {
         thread.setDaemon(true);
         thread.start();
     }
+
+    private void invokeHandler(RedisQueueMessage redisQueueMessage, RedisQueueProcessService redisQueueProcessService) {
+        RedisQueueProcessResp result = null;
+     //   try {
+            result =  redisQueueProcessService.handler(redisQueueMessage);
+          //  ifFailAgainAddQueue(redisQueueMessage, result);
+       // } catch (Exception e) {
+            // 执行出现异常重新加入队列
+           // push(redisQueueMessage);
+            System.out.println("执行业务代码程序异常");
+          //  throw new RuntimeException("执行业务代码异常");
+     //   }
+    }
+
+    protected void ifFailAgainAddQueue(RedisQueueMessage redisQueueMessage, RedisQueueProcessResp result) {
+        if (!StringUtils.isEmpty(result) && HttpStatus.OK.value() != result.getCode()) {
+            // 错误要重新加入队列
+            push(redisQueueMessage);
+        }
+    }
+
 
     private RedisQueueProcessService adapterHandler(String beanName) {
        return applicationContext.getBean(beanName, RedisQueueProcessService.class);
