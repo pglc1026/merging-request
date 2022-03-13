@@ -2,11 +2,15 @@ package com.springboot.sample.aspectj;
 
 import com.springboot.sample.annotation.ConditionalValidate;
 import com.springboot.sample.annotation.ConditionalValidateField;
+import com.springboot.sample.aspectj.action.ValidateHandle;
+import com.springboot.sample.aspectj.action.impl.IfEqNotNullHandle;
 import com.springboot.sample.constant.ValidateFieldAction;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.EvaluationContext;
@@ -14,17 +18,17 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
 @Aspect
 //@Component
-public class ConditionalValidateAspect {
+public class ConditionalValidateAspect implements InitializingBean {
 
     //将方法参数纳入Spring管理
     private final LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
@@ -32,6 +36,11 @@ public class ConditionalValidateAspect {
     //解析spel表达式
     private final ExpressionParser parser = new SpelExpressionParser();
 
+    private final Map<Integer, ValidateHandle> validateFieldActionHandleMapping = new HashMap<>();
+
+
+    @Resource
+    private ApplicationContext applicationContext;
 
     @Before("@annotation(conditionalValidate)")
     public void doBefore(JoinPoint joinPoint, ConditionalValidate conditionalValidate) throws Throwable {
@@ -45,11 +54,11 @@ public class ConditionalValidateAspect {
 
 
         //获取方法参数名
-        String[] params = discoverer.getParameterNames(method);
+        String[] paramsName = discoverer.getParameterNames(method);
         //将参数纳入Spring管理
         EvaluationContext context = new StandardEvaluationContext();
-        for (int len = 0; len < params.length; len++) {
-            context.setVariable(params[len], args[len]);
+        for (int len = 0; len < paramsName.length; len++) {
+            context.setVariable(paramsName[len], args[len]);
         }
 
         Object firstParams = args[0];
@@ -60,14 +69,7 @@ public class ConditionalValidateAspect {
             List<ConditionalValidateFieldInfo> validateFieldList = new ArrayList<>();
             // 字段类型
             Map<String, Class> fieldClzMap = new HashMap<>();
-            allFields.forEach(field -> {
-                ConditionalValidateField conditionalValidateField = AnnotationUtils.findAnnotation(field, ConditionalValidateField.class);
-                String fieldName = field.getName();
-                if (!StringUtils.isEmpty(conditionalValidateField)) {
-                    validateFieldList.add(new ConditionalValidateFieldInfo(fieldName, conditionalValidateField));
-                }
-                fieldClzMap.put(fieldName, field.getType());
-            });
+            findAnnotationFieldAndClass(allFields, fieldClzMap, validateFieldList);
 
 
             // 执行校验动作，这块要分很多种情况处理
@@ -75,39 +77,31 @@ public class ConditionalValidateAspect {
                 if (!StringUtils.isEmpty(conditionalValidateFieldInfo)) {
                     ConditionalValidateField conditionalValidateField = conditionalValidateFieldInfo.getConditionalValidateField();
                     //TODO 这个地方可以使用策略模式优化下，共性的地方用模板方法
-                    // 如果是相等 执行校验
-                    if (ValidateFieldAction.IF_EQ_NOT_NULL == conditionalValidateField.action()) {
-                        // 判断该字段类型
-                        Class originalClz = fieldClzMap.get(conditionalValidateFieldInfo.getFieldName());
-                        //TODO 只写了Integer类型的
-                        if (Integer.class.getSimpleName().equals(originalClz.getSimpleName())) {
-                            Expression expression = parser.parseExpression("#" + params[0] + "." + conditionalValidateFieldInfo.getFieldName());
-                            Integer originalValue = expression.getValue(context, Integer.class);
-                            if (!StringUtils.isEmpty(conditionalValidateField.value())) {
-                                // 如果是相等的
-                                if (Integer.valueOf(conditionalValidateField.value()).equals(originalValue)) {
-                                    Expression relationExpression = parser.parseExpression("#" + params[0] + "." + conditionalValidateField.relationField());
-                                    String relationField = conditionalValidateField.relationField();
-                                    Object value = relationExpression.getValue(context, fieldClzMap.get(relationField));
-                                    Assert.isTrue(!StringUtils.isEmpty(value), conditionalValidateField.message());
-                                }
-                            } else {
-                                // 为空的情况,有可能要求原字段为空，关联字段不能为空的情况；判断都是空就校验
-                                if (StringUtils.isEmpty(conditionalValidateField.value()) && StringUtils.isEmpty(originalValue)) {
-                                    Expression relationExpression = parser.parseExpression("#" + params[0] + "." + conditionalValidateField.relationField());
-                                    String relationField = conditionalValidateField.relationField();
-                                    Object value = relationExpression.getValue(context, fieldClzMap.get(relationField));
-                                    Assert.isTrue(!StringUtils.isEmpty(value), conditionalValidateField.message());
-                                }
-                            }
-                        }
-                    }
+                    doValidate(conditionalValidateField, fieldClzMap, parser, conditionalValidateFieldInfo, context, paramsName);
                 }
             });
 
         }
 
 
+    }
+
+    private void doValidate(ConditionalValidateField conditionalValidateField, Map<String, Class> fieldClzMap, ExpressionParser parser, ConditionalValidateFieldInfo conditionalValidateFieldInfo, EvaluationContext context, String[] paramsName) {
+        ValidateHandle validateHandle = validateFieldActionHandleMapping.get(conditionalValidateField.action());
+        Assert.isTrue(!StringUtils.isEmpty(validateHandle), "不能处理的类型" + conditionalValidateField.action());
+        validateHandle.doValidate(conditionalValidateField, fieldClzMap, parser, conditionalValidateFieldInfo, context, paramsName);
+    }
+
+
+    private void findAnnotationFieldAndClass(List<Field> allFields, Map<String, Class> fieldClzMap, List<ConditionalValidateFieldInfo> validateFieldList) {
+        allFields.forEach(field -> {
+            ConditionalValidateField conditionalValidateField = AnnotationUtils.findAnnotation(field, ConditionalValidateField.class);
+            String fieldName = field.getName();
+            if (!StringUtils.isEmpty(conditionalValidateField)) {
+                validateFieldList.add(new ConditionalValidateFieldInfo(fieldName, conditionalValidateField));
+            }
+            fieldClzMap.put(fieldName, field.getType());
+        });
     }
 
     public static List<Field> getAllFields(Object object) {
@@ -118,6 +112,16 @@ public class ConditionalValidateAspect {
             clazz = clazz.getSuperclass();
         }
         return fieldList;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initValidateHandleMapping();
+    }
+
+    private void initValidateHandleMapping() {
+        validateFieldActionHandleMapping.put(ValidateFieldAction.IF_EQ_NOT_NULL, applicationContext.getBean(IfEqNotNullHandle.class));
+
     }
 
     /***
