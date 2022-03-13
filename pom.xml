@@ -13,7 +13,7 @@
 	<modules>
 		<module>sample</module>
 		<module>redis-protocol</module>
-		<module>conditional-validate</module>
+		<module>conditional-validate-starter</module>
 	</modules>
 
 	<properties>

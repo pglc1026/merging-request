@@ -92,7 +92,7 @@
 
 		<dependency>
 			<groupId>com.springboot.sample</groupId>
-			<artifactId>conditional-validate</artifactId>
+			<artifactId>conditional-validate-starter</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

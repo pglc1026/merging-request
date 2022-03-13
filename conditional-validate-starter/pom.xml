@@ -9,9 +9,9 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<groupId>com.springboot.sample</groupId>
-	<artifactId>conditional-validate</artifactId>
+	<artifactId>conditional-validate-starter</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>conditional-validate</name>
+	<name>conditional-validate-starter</name>
 	<description>Spring Boot Sample</description>
 	<packaging>jar</packaging>
 
