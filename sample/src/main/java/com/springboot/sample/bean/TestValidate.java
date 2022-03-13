@@ -12,12 +12,14 @@ public class TestValidate {
     /**
      * 姓名
      **/
-    @NotNull(message = "姓名必填")
+    @NotBlank(message = "姓名必填")
     private String name;
 
     /*** 是否有房 0 - 没房子 1 - 有房子 */
     @NotNull(message = "是否有房必填")
-    @ConditionalValidateField(relationField = "hoursAreas", action = ValidateFieldAction.NOT_NULL, message = "有房子，房子面积必填")
+    @ConditionalValidateField(relationField = "hoursAreas", value = "1",
+            action = ValidateFieldAction.IF_EQ_NOT_NULL,
+            message = "有房子，房子面积必填")
     private Integer isHaveHours;
 
     /***

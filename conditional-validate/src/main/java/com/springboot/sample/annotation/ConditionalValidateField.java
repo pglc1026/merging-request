@@ -17,6 +17,9 @@ public @interface ConditionalValidateField {
      * */
     int action();
 
+    /** 该字段的值为**/
+    String value() default "";
+
     /***
      * 异常信息
      * */

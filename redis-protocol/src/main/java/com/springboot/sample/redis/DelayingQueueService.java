@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * 2022年2月13日13:39:34
  * 延迟队列
  * */
-@Component
+//@Component
 public class DelayingQueueService implements InitializingBean {
 
     private static ObjectMapper mapper = Jackson2ObjectMapperBuilder.json().build();

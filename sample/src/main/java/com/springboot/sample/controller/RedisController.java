@@ -18,7 +18,7 @@ public class RedisController {
 
     private static final String beanName = "sampleRedisQueueProcessServiceImpl";
 
-    @Resource
+//    @Resource
     private DelayingQueueService delayingQueueService;
 
     /**
