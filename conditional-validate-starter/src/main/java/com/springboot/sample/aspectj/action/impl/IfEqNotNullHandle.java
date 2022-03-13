@@ -27,9 +27,9 @@ public class IfEqNotNullHandle implements ValidateHandle {
         if (Integer.class.getSimpleName().equals(originalClz.getSimpleName())) {
             Expression expression = parser.parseExpression("#" + paramsName[0] + "." + conditionalValidateFieldInfo.getFieldName());
             Integer originalValue = expression.getValue(context, Integer.class);
-            if (!StringUtils.isEmpty(conditionalValidateField.value())) {
+            if (!StringUtils.isEmpty(conditionalValidateField.ifValue())) {
                 // 如果是相等的
-                if (Integer.valueOf(conditionalValidateField.value()).equals(originalValue)) {
+                if (Integer.valueOf(conditionalValidateField.ifValue()).equals(originalValue)) {
                     Expression relationExpression = parser.parseExpression("#" + paramsName[0] + "." + conditionalValidateField.relationField());
                     String relationField = conditionalValidateField.relationField();
                     Object value = relationExpression.getValue(context, fieldClzMap.get(relationField));
@@ -37,7 +37,7 @@ public class IfEqNotNullHandle implements ValidateHandle {
                 }
             } else {
                 // 为空的情况,有可能要求原字段为空，关联字段不能为空的情况；判断都是空就校验
-                if (StringUtils.isEmpty(conditionalValidateField.value()) && StringUtils.isEmpty(originalValue)) {
+                if (StringUtils.isEmpty(conditionalValidateField.ifValue()) && StringUtils.isEmpty(originalValue)) {
                     Expression relationExpression = parser.parseExpression("#" + paramsName[0] + "." + conditionalValidateField.relationField());
                     String relationField = conditionalValidateField.relationField();
                     Object value = relationExpression.getValue(context, fieldClzMap.get(relationField));

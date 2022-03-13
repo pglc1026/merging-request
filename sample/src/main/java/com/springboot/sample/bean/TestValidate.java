@@ -17,7 +17,7 @@ public class TestValidate {
 
     /*** 是否有房 0 - 没房子 1 - 有房子 */
     @NotNull(message = "是否有房必填")
-    @ConditionalValidateField(relationField = "hoursAreas", value = "1",
+    @ConditionalValidateField(relationField = "hoursAreas", ifValue = "1",
             action = ValidateFieldAction.IF_EQ_NOT_NULL,
             message = "有房子，房子面积必填")
     private Integer isHaveHours;
