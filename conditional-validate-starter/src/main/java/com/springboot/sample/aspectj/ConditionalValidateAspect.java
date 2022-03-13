@@ -3,7 +3,7 @@ package com.springboot.sample.aspectj;
 import com.springboot.sample.annotation.ConditionalValidate;
 import com.springboot.sample.annotation.ConditionalValidateField;
 import com.springboot.sample.aspectj.action.ValidateHandle;
-import com.springboot.sample.aspectj.action.impl.IfEqNotNullHandle;
+import com.springboot.sample.aspectj.action.impl.IfEqNotNullHandleImpl;
 import com.springboot.sample.constant.ValidateFieldAction;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,7 +14,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -120,7 +119,7 @@ public class ConditionalValidateAspect implements InitializingBean {
     }
 
     private void initValidateHandleMapping() {
-        validateFieldActionHandleMapping.put(ValidateFieldAction.IF_EQ_NOT_NULL, applicationContext.getBean(IfEqNotNullHandle.class));
+        validateFieldActionHandleMapping.put(ValidateFieldAction.IF_EQ_NOT_NULL, applicationContext.getBean(IfEqNotNullHandleImpl.class));
 
     }
 

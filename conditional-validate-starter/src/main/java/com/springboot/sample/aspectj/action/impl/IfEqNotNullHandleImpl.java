@@ -16,7 +16,7 @@ import java.util.Map;
 * 如果相等，判断是否为空
 * */
 @Service
-public class IfEqNotNullHandle implements ValidateHandle {
+public class IfEqNotNullHandleImpl implements ValidateHandle {
 
 
     @Override
