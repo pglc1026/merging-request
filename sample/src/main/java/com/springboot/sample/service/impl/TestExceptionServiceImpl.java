@@ -15,6 +15,9 @@ public class TestExceptionServiceImpl implements TestExceptionService {
     @Resource
     private UsersMapper usersMapper;
 
+    /***
+     * Transaction rolled back because it has been marked as rollback-only
+     * */
     @Override
     @Transactional(rollbackFor = Exception.class,propagation = Propagation.REQUIRES_NEW)
     public void test() {
