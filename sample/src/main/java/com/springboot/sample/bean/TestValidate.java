@@ -1,10 +1,14 @@
 package com.springboot.sample.bean;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.springboot.sample.annotation.ConditionalValidateField;
 import com.springboot.sample.constant.ValidateFieldAction;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.xml.crypto.Data;
+import java.util.Date;
 
 public class TestValidate {
 
@@ -20,6 +24,9 @@ public class TestValidate {
     @ConditionalValidateField(relationField = "hoursAreas", ifValue = "1",
             action = ValidateFieldAction.IF_EQ_NOT_NULL,
             message = "有房子，房子面积必填")
+    @ConditionalValidateField(relationField = "time", ifValue = "0",
+            action = ValidateFieldAction.IF_EQ_NOT_NULL,
+            message = "没房子，要填准备买房日期")
     private Integer isHaveHours;
 
     /***
@@ -27,6 +34,18 @@ public class TestValidate {
      * */
     private Integer hoursAreas;
 
+
+    /** 什么时候买房**/
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date time;
+
+    public Date getTime() {
+        return time;
+    }
+
+    public void setTime(Date time) {
+        this.time = time;
+    }
 
     public String getName() {
         return name;

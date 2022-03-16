@@ -1,5 +1,6 @@
 package com.springboot.sample.aspectj;
 
+import com.springboot.sample.annotation.Annotations;
 import com.springboot.sample.annotation.ConditionalValidate;
 import com.springboot.sample.annotation.ConditionalValidateField;
 import com.springboot.sample.aspectj.action.ValidateHandle;
@@ -94,10 +95,12 @@ public class ConditionalValidateAspect implements InitializingBean {
 
     private void findAnnotationFieldAndClass(List<Field> allFields, Map<String, Class> fieldClzMap, List<ConditionalValidateFieldInfo> validateFieldList) {
         allFields.forEach(field -> {
-            ConditionalValidateField conditionalValidateField = AnnotationUtils.findAnnotation(field, ConditionalValidateField.class);
+            Set<ConditionalValidateField> conditionalValidateFields = AnnotationUtils.getRepeatableAnnotations(field,ConditionalValidateField.class);
             String fieldName = field.getName();
-            if (!StringUtils.isEmpty(conditionalValidateField)) {
-                validateFieldList.add(new ConditionalValidateFieldInfo(fieldName, conditionalValidateField));
+            for (ConditionalValidateField conditionalValidateField : conditionalValidateFields) {
+                if (!StringUtils.isEmpty(conditionalValidateField)) {
+                    validateFieldList.add(new ConditionalValidateFieldInfo(fieldName, conditionalValidateField));
+                }
             }
             fieldClzMap.put(fieldName, field.getType());
         });

@@ -2,9 +2,8 @@ package com.springboot.sample.annotation;
 
 import java.lang.annotation.*;
 
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
+
+@Repeatable(Annotations.class)
 public @interface ConditionalValidateField {
 
     /***
