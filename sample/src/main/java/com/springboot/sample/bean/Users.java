@@ -40,4 +40,13 @@ public class Users {
     public void setIsVip(Integer isVip) {
         this.isVip = isVip;
     }
+
+    @Override
+    public String toString() {
+        return "Users{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", isVip=" + isVip +
+                '}';
+    }
 }
