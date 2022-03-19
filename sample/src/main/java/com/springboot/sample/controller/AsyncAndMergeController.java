@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 @RequestMapping("/asyncAndMerge")
 public class AsyncAndMergeController {
 
-    /*** 异步，不阻塞Tomcat的线程 ***/
+    /*** 异步，不阻塞Tomcat的线程 ，提升Tomcat吞吐量***/
     @RequestMapping("/async")
     public Callable<String> async() {
         System.out.println(" 当前线程 外部 " + Thread.currentThread().getName());
