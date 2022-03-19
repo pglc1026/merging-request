@@ -5,7 +5,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.concurrent.CountDownLatch;
 
 public class TestBatch {
-    private static int threadCount = 30;
+    private static int threadCount = 100;
 
     private final static CountDownLatch COUNT_DOWN_LATCH = new CountDownLatch(threadCount); //为保证30个线程同时并发运行
 
@@ -24,7 +24,7 @@ public class TestBatch {
                         e.printStackTrace();
                     }
 
-                    for (int j = 0; j < 10; j++) {
+                    for (int j = 1; j <= 3; j++) {
                         String responseBody = restTemplate.getForObject("http://localhost:8080/asyncAndMerge/merge?userId=" + j, String.class);
                         System.out.println(Thread.currentThread().getName() + "参数 " + j + " 返回值 " + responseBody);
                     }

@@ -9,10 +9,10 @@ import javax.annotation.Resource;
 import java.util.concurrent.Callable;
 
 /*
-* zzq
-* 2022年3月19日11:00:18
-* 异步和请求合并
-* */
+ * zzq
+ * 2022年3月19日11:00:18
+ * 异步和请求合并
+ * */
 @RestController
 @RequestMapping("/asyncAndMerge")
 public class AsyncAndMergeController {
@@ -37,9 +37,22 @@ public class AsyncAndMergeController {
     /***
      * 请求合并
      * */
-    @RequestMapping("/merge")
+/*    @RequestMapping("/merge")
     public Users merge(Long userId) {
        return userBatchService.queryUser(userId);
+    }*/
+
+    /***
+     * 请求合并
+     * */
+    @RequestMapping("/merge")
+    public Callable<Users> merge(Long userId) {
+        return new Callable<Users>() {
+            @Override
+            public Users call() throws Exception {
+                return userBatchService.queryUser(userId);
+            }
+        };
     }
 
 }
