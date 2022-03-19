@@ -2,6 +2,8 @@
 - Servlet 3.0+ 异步
 - 合并请求
 - 参考 https://www.cnblogs.com/oyjg/p/13099998.html
+- https://docs.spring.io/spring-framework/docs/5.2.19.RELEASE/spring-framework-reference/web.html#mvc-ann-async-processing
+- https://blog.csdn.net/lxhjh/article/details/70237473
 
 # v1.0.4 
 - 支持同一个属性多次使用相同注解
