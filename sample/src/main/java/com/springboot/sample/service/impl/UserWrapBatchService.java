@@ -29,7 +29,7 @@ public class UserWrapBatchService {
         String requestId;
         // 参数
         Long userId;
-        // juc的包
+
         CompletableFuture<Users> completableFuture;
 
         public String getRequestId() {
@@ -105,6 +105,7 @@ public class UserWrapBatchService {
 
     public Users queryUser(Long userId)  {
         Request request = new Request();
+        // 这里用UUID做请求id
         request.requestId = UUID.randomUUID().toString().replace("-", "");
         request.userId = userId;
         CompletableFuture<Users> future = new CompletableFuture<>();
