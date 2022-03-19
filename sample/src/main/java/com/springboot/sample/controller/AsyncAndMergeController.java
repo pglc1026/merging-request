@@ -1,8 +1,11 @@
 package com.springboot.sample.controller;
 
+import com.springboot.sample.bean.Users;
+import com.springboot.sample.service.impl.UserWrapBatchService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.concurrent.Callable;
 
 /*
@@ -13,6 +16,9 @@ import java.util.concurrent.Callable;
 @RestController
 @RequestMapping("/asyncAndMerge")
 public class AsyncAndMergeController {
+
+    @Resource
+    private UserWrapBatchService userBatchService;
 
     /*** 异步，不阻塞Tomcat的线程 ，提升Tomcat吞吐量***/
     @RequestMapping("/async")
@@ -28,6 +34,12 @@ public class AsyncAndMergeController {
         return callable;
     }
 
-
+    /***
+     * 请求合并
+     * */
+    @RequestMapping("/merge")
+    public Users merge(Long userId) {
+       return userBatchService.queryUser(userId);
+    }
 
 }
