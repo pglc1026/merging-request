@@ -1,7 +1,12 @@
+# v1.0.5
+- Servlet 3.0+ 异步
+- 合并请求
+
 # v1.0.4 
 - 支持同一个属性多次使用相同注解
 - 测试事务
-
+# v1.0.2 
+- 条件注解，关联校验
 # spring-boot-kubernetes
 spring-boot-kubernetes例子
 
