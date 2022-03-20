@@ -2,7 +2,7 @@
 - Servlet 3.0+ 异步
 - 合并请求
 - 参考 https://www.cnblogs.com/oyjg/p/13099998.html
-- https://docs.spring.io/spring-framework/docs/5.2.19.RELEASE/spring-framework-reference/web.html#mvc-ann-async-processing
+- https://docs.spring.io/spring-framework/docs/5.2.19.RELEASE/spring-framework-reference/web.html#mvc-ann-async
 - https://blog.csdn.net/lxhjh/article/details/70237473
 
 # v1.0.4 
@@ -10,6 +10,7 @@
 - 测试事务
 # v1.0.2 
 - 条件注解，关联校验
+- Redis zset消息队列、延迟队列
 # spring-boot-kubernetes
 spring-boot-kubernetes例子
 

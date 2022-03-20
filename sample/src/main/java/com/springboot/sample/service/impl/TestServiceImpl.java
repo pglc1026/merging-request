@@ -37,4 +37,10 @@ public class TestServiceImpl implements TestService {
             throw new RuntimeException("测试事务回滚");
         }*/
     }
+
+    @Override
+    public String testDeferredResult() {
+        System.out.println("内部线程 名称 "+Thread.currentThread().getName());
+        return "testDeferredResult";
+    }
 }
