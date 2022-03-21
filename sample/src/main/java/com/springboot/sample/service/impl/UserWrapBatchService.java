@@ -19,6 +19,11 @@ public class UserWrapBatchService {
     @Resource
     private UserService userService;
 
+    /**
+     * 最大任务数
+     **/
+    public static int MAX_TASK_NUM = 100;
+
 
     /**
      * 请求类,code为查询的共同特征,例如查询商品,通过不同id的来区分
@@ -29,7 +34,7 @@ public class UserWrapBatchService {
         String requestId;
         // 参数
         Long userId;
-
+        //TODO Java 8 的 CompletableFuture 并没有 timeout 机制
         CompletableFuture<Users> completableFuture;
 
         public String getRequestId() {
@@ -83,8 +88,10 @@ public class UserWrapBatchService {
             System.out.println("合并了 [" + size + "] 个请求");
             //将队列的请求消费到一个集合保存
             for (int i = 0; i < size; i++) {
-                //TODO 存在的问题，后面的SQL语句是有长度限制的，所以还要做限制每次批量的数量
-                list.add(queue.poll());
+                // 后面的SQL语句是有长度限制的，所以还要做限制每次批量的数量,超过最大任务数，等下次执行
+                if (i < MAX_TASK_NUM) {
+                    list.add(queue.poll());
+                }
             }
             //拿到我们需要去数据库查询的特征,保存为集合
             List<Request> userReqs = new ArrayList<>();
@@ -103,7 +110,7 @@ public class UserWrapBatchService {
         //这里我写的是 初始化后100毫秒后执行，周期性执行10毫秒执行一次
     }
 
-    public Users queryUser(Long userId)  {
+    public Users queryUser(Long userId) {
         Request request = new Request();
         // 这里用UUID做请求id
         request.requestId = UUID.randomUUID().toString().replace("-", "");
