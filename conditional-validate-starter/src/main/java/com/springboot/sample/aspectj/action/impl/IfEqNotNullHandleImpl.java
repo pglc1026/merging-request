@@ -15,7 +15,6 @@ import java.util.Map;
 /*
 * 如果相等，判断是否为空
 * */
-@Service
 public class IfEqNotNullHandleImpl implements ValidateHandle {
 
 
