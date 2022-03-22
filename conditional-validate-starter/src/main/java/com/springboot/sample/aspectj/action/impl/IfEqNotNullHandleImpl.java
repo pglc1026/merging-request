@@ -14,7 +14,7 @@ import java.util.Map;
 
 /*
 * 如果相等，判断是否为空
-*spring.factories 方式注册的 beanName是 com.springboot.sample.aspectj.action.impl.IfEqNotNullHandleImpl 即使@Service被扫描也不会beanName冲突
+*spring.factories 自动装配的 beanName是 com.springboot.sample.aspectj.action.impl.IfEqNotNullHandleImpl 即使@Service被扫描也不会beanName冲突
 * */
 @Service
 public class IfEqNotNullHandleImpl implements ValidateHandle {
