@@ -2,6 +2,7 @@ package com.springboot.sample.controller;
 
 import com.springboot.sample.bean.Users;
 import com.springboot.sample.service.TestService;
+import com.springboot.sample.service.impl.UserWrapBatchQueueService;
 import com.springboot.sample.service.impl.UserWrapBatchService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +24,8 @@ import java.util.concurrent.Executors;
 public class AsyncAndMergeController {
 
     @Resource
-    private UserWrapBatchService userBatchService;
+//    private UserWrapBatchService userBatchService;
+    private UserWrapBatchQueueService userWrapBatchQueueService;
 
     @Resource
     private TestService testService;
@@ -36,7 +38,7 @@ public class AsyncAndMergeController {
     public DeferredResult<String> async() {
         System.out.println(" 当前线程 外部 " + Thread.currentThread().getName());
         DeferredResult<String> result = new DeferredResult<>();
-        CompletableFuture.supplyAsync(testService::testDeferredResult,executorService)
+        CompletableFuture.supplyAsync(testService::testDeferredResult, executorService)
                 .whenCompleteAsync((res, throwable) -> result.setResult(res));
         return result;
     }
@@ -71,7 +73,8 @@ public class AsyncAndMergeController {
         return new Callable<Users>() {
             @Override
             public Users call() throws Exception {
-                return userBatchService.queryUser(userId);
+//                return userBatchService.queryUser(userId);
+                return userWrapBatchQueueService.queryUser(userId);
             }
         };
     }
