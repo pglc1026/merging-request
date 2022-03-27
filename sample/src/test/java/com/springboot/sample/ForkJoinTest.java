@@ -1,5 +1,12 @@
 package com.springboot.sample;
 
+import com.springboot.sample.service.UserService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
@@ -7,7 +14,15 @@ import java.util.concurrent.RecursiveTask;
 /***
  * ForkJoin测试，寻找最大数
  * */
+@RunWith(SpringRunner.class)
+@SpringBootTest/*(classes = SampleApplication.class,webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)*/
 public class ForkJoinTest {
+
+
+    @Resource
+    private UserService userService;
+
+
     // 如果是继承RecursiveAction无返回值
     public static class MyTask extends RecursiveTask<Integer> {
 
@@ -49,11 +64,29 @@ public class ForkJoinTest {
         System.out.println("最大值:" + myTask.join());*/
 
 
+/*
         ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * 2);
         // 模拟千万数据
         int min = 1;
         int max = 10000000;
         SunTask sunTask = new SunTask(min, max);
+        pool.invoke(sunTask);
+
+        System.out.println("总数 " + sunTask.join() +
+                " 执行时间 " + (System.currentTimeMillis() - startTime));
+*/
+
+    }
+
+
+    @Test
+    public void sunTask() {
+        long startTime = System.currentTimeMillis();
+        ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * 2);
+        // 模拟千万数据
+        int min = 1;
+        int max = 10556466;
+        SunTask sunTask = new SunTask(min, max,userService);
         pool.invoke(sunTask);
 
         System.out.println("总数 " + sunTask.join() +
@@ -67,10 +100,13 @@ public class ForkJoinTest {
 
         int fromId;
         int toId;
+        private UserService userService;
 
-        public SunTask(int fromId, int toId) {
+
+        public SunTask(int fromId, int toId, UserService userService) {
             this.fromId = fromId;
             this.toId = toId;
+            this.userService = userService;
         }
 
         @Override
@@ -79,26 +115,20 @@ public class ForkJoinTest {
                 return sumRecord(toId, fromId);
             } else {
                 int mid = (fromId + toId) / 2;
-                SunTask left = new SunTask(fromId, mid);
-                SunTask right = new SunTask(mid + 1, toId);
+                SunTask left = new SunTask(fromId, mid, userService);
+                SunTask right = new SunTask(mid + 1, toId, userService);
                 invokeAll(left, right);
-
                 return left.join() + right.join();
             }
         }
 
-
-    }
-
-    public static Long sumRecord(int toId, int fromId) {
-        // 模拟查询数据库, 延迟执行
-        String sql = "select xx from xxx.... where id > " + fromId + " and id < " + toId;
-        System.out.println(" 参数 " + fromId +" " + toId);
-        try {
-            Thread.sleep(15);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        public Long sumRecord(int toId, int fromId) {
+            System.out.println(" 参数 " + fromId + " " + toId);
+            return  userService.sumRecord(toId, fromId);
         }
-        return 1L;
+
+
     }
+
+
 }

@@ -17,6 +17,17 @@ public class Users {
     @TableField("is_vip")
     private Integer isVip;
 
+    @TableField("money")
+    private Long money;
+
+    public Long getMoney() {
+        return money;
+    }
+
+    public void setMoney(Long money) {
+        this.money = money;
+    }
+
     public Long getId() {
         return id;
     }

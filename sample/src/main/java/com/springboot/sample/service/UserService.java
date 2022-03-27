@@ -17,4 +17,6 @@ public interface UserService {
      * 2022年3月26日16:00:16
      * */
     Map<String, Users> queryUserByIdBatchQueue(List<UserWrapBatchQueueService.Request> userReqs);
+
+    long sumRecord(int toId, int fromId);
 }

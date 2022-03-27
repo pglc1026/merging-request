@@ -5,6 +5,27 @@
 - https://docs.spring.io/spring-framework/docs/5.2.19.RELEASE/spring-framework-reference/web.html#mvc-ann-async
 - https://blog.csdn.net/lxhjh/article/details/70237473
 - ForkJoin测试
+## 批量插入数据，模拟千万数据
+```bash
+DELIMITER $$
+USE `dwc-admin`$$
+DROP PROCEDURE IF EXISTS `proc_user`$$
+
+CREATE DEFINER=`root`@`%` PROCEDURE `proc_user`()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+   WHILE i <= 10000000 DO
+    
+
+     INSERT INTO  `t_users`(`name`) VALUES ( '张三');
+
+     SET i=i+1;
+     END WHILE;
+END$$
+
+
+CALL `proc_user`();
+```
 
 # v1.0.4 
 - 支持同一个属性多次使用相同注解
