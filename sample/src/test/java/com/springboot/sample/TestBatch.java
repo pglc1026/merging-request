@@ -28,7 +28,7 @@ public class TestBatch {
                     for (int j = 1; j <= 3; j++) {
                         int param = new Random().nextInt(4);
                         if (param <=0){
-//                            param++;
+                            param++;
                         }
                         String responseBody = restTemplate.getForObject("http://localhost:8080/asyncAndMerge/merge?userId=" + param, String.class);
                         System.out.println(Thread.currentThread().getName() + "参数 " + param + " 返回值 " + responseBody);
