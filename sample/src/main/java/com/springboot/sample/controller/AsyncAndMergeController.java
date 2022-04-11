@@ -24,7 +24,9 @@ import java.util.concurrent.Executors;
 public class AsyncAndMergeController {
 
     @Resource
-//    private UserWrapBatchService userBatchService;
+    private UserWrapBatchService userBatchService;
+
+    @Resource
     private UserWrapBatchQueueService userWrapBatchQueueService;
 
     @Resource
