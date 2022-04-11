@@ -57,8 +57,8 @@ public class UserServiceImpl implements UserService {
             if (!CollectionUtils.isEmpty(usersList)) {
                 result.put(val.getRequestId(), usersList.get(0));
             } else {
-                // 表示没数据
-                result.put(val.getRequestId(), null);
+                // 表示没数据 , 这里要new，不然加入队列会空指针
+                result.put(val.getRequestId(), new Users());
             }
         });
         return result;

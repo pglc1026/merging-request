@@ -2,10 +2,11 @@ package com.springboot.sample;
 
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 public class TestBatch {
-    private static int threadCount = 100;
+    private static int threadCount = 30;
 
     private final static CountDownLatch COUNT_DOWN_LATCH = new CountDownLatch(threadCount); //为保证30个线程同时并发运行
 
@@ -25,8 +26,12 @@ public class TestBatch {
                     }
 
                     for (int j = 1; j <= 3; j++) {
-                        String responseBody = restTemplate.getForObject("http://localhost:8080/asyncAndMerge/merge?userId=" + j, String.class);
-                        System.out.println(Thread.currentThread().getName() + "参数 " + j + " 返回值 " + responseBody);
+                        int param = new Random().nextInt(4);
+                        if (param <=0){
+//                            param++;
+                        }
+                        String responseBody = restTemplate.getForObject("http://localhost:8080/asyncAndMerge/merge?userId=" + param, String.class);
+                        System.out.println(Thread.currentThread().getName() + "参数 " + param + " 返回值 " + responseBody);
                     }
                 }
             }).start();
