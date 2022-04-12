@@ -85,8 +85,8 @@ public class ForkJoinTest {
         ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * 2);
         // 模拟千万数据
         int min = 1;
-        int max = 10556466;
-        SumTask sumTask = new SumTask(min, max,userService);
+        int max = 17000003;
+        SumTask sumTask = new SumTask(min, max, userService);
         pool.invoke(sumTask);
 
         System.out.println("总数 " + sumTask.join() +
@@ -124,7 +124,7 @@ public class ForkJoinTest {
 
         public Long sumRecord(int toId, int fromId) {
             System.out.println(" 参数 " + fromId + " " + toId);
-            return  userService.sumRecord(toId, fromId);
+            return userService.sumRecord(toId, fromId);
         }
 
 
