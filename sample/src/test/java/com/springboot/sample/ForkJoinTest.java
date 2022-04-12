@@ -86,24 +86,24 @@ public class ForkJoinTest {
         // 模拟千万数据
         int min = 1;
         int max = 10556466;
-        SunTask sunTask = new SunTask(min, max,userService);
-        pool.invoke(sunTask);
+        SumTask sumTask = new SumTask(min, max,userService);
+        pool.invoke(sumTask);
 
-        System.out.println("总数 " + sunTask.join() +
+        System.out.println("总数 " + sumTask.join() +
                 " 执行时间 " + (System.currentTimeMillis() - startTime));
 
     }
 
-    public static final Integer THRESHOLD = 5000;
+    public static final Integer THRESHOLD = 1000000;
 
-    public static class SunTask extends RecursiveTask<Long> {
+    public static class SumTask extends RecursiveTask<Long> {
 
         int fromId;
         int toId;
         private UserService userService;
 
 
-        public SunTask(int fromId, int toId, UserService userService) {
+        public SumTask(int fromId, int toId, UserService userService) {
             this.fromId = fromId;
             this.toId = toId;
             this.userService = userService;
@@ -115,8 +115,8 @@ public class ForkJoinTest {
                 return sumRecord(toId, fromId);
             } else {
                 int mid = (fromId + toId) / 2;
-                SunTask left = new SunTask(fromId, mid, userService);
-                SunTask right = new SunTask(mid + 1, toId, userService);
+                SumTask left = new SumTask(fromId, mid, userService);
+                SumTask right = new SumTask(mid + 1, toId, userService);
                 invokeAll(left, right);
                 return left.join() + right.join();
             }
