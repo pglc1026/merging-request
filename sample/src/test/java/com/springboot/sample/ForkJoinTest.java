@@ -80,7 +80,7 @@ public class ForkJoinTest {
 
 
     @Test
-    public void sunTask() {
+    public void sumTask() {
         long startTime = System.currentTimeMillis();
         ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * 2);
         // 模拟千万数据
