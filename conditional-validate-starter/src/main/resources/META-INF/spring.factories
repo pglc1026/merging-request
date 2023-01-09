@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.springboot.sample.aspectj.ConditionalValidateAspect,\
-com.springboot.sample.aspectj.action.impl.IfEqNotNullHandleImpl

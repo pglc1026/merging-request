@@ -2,18 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.springboot.sample</groupId>
-	<artifactId>spring-boot-kubernetes</artifactId>
+	<groupId>com.pglc1026</groupId>
+	<artifactId>merging-request-sample</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spring-boot-kubernetes</name>
+	<name>merging-request-sample</name>
 	<description>spring-boot-kubernetes</description>
 	<packaging>pom</packaging>
 
 
 	<modules>
 		<module>sample</module>
-		<module>redis-protocol</module>
-		<module>conditional-validate-starter</module>
 	</modules>
 
 	<properties>
@@ -24,9 +22,7 @@
 
 
 	<dependencyManagement>
-
 		<dependencies>
-
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
@@ -34,8 +30,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-
-
 
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
