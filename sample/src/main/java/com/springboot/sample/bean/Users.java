@@ -1,23 +1,24 @@
 package com.springboot.sample.bean;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-@TableName("t_users")
+@Entity
+@Table(name = "t_users")
 public class Users {
 
-    @TableId(value = "id",type = IdType.AUTO)
+    @Id
     private Long id;
 
-    @TableField("name")
+    @Column
     private String name;
 
-    @TableField("is_vip")
+    @Column
     private Integer isVip;
 
-    @TableField("money")
+    @Column
     private Long money;
 
     public Long getMoney() {

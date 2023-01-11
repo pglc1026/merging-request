@@ -1,5 +1,6 @@
 package com.springboot.sample.service.impl;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.springboot.sample.bean.Users;
 import com.springboot.sample.service.UserService;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class UserWrapBatchQueueService {
         // 参数
         Long userId;
         // 队列，这个有超时机制
-        LinkedBlockingQueue<Users> usersQueue;
+        LinkedBlockingQueue<Optional<Users>> usersQueue;
 
 
         public String getRequestId() {
@@ -55,11 +56,11 @@ public class UserWrapBatchQueueService {
             this.userId = userId;
         }
 
-        public LinkedBlockingQueue<Users> getUsersQueue() {
+        public LinkedBlockingQueue<Optional<Users>> getUsersQueue() {
             return usersQueue;
         }
 
-        public void setUsersQueue(LinkedBlockingQueue<Users> usersQueue) {
+        public void setUsersQueue(LinkedBlockingQueue<Optional<Users>> usersQueue) {
             this.usersQueue = usersQueue;
         }
     }
@@ -73,12 +74,12 @@ public class UserWrapBatchQueueService {
     而LinkedBlockingQueue实现的队列中的锁是分离的，其添加采用的是putLock，移除采用的则是takeLock，这样能大大提高队列的吞吐量，
     也意味着在高并发的情况下生产者和消费者可以并行地操作队列中的数据，以此来提高整个队列的并发性能。
      */
-    private final Queue<Request> queue = new LinkedBlockingQueue();
+    private final Queue<Request> queue = new LinkedBlockingQueue<>(30);
 
     @PostConstruct
     public void init() {
         //定时任务线程池,创建一个支持定时、周期性或延时任务的限定线程数目(这里传入的是1)的线程池
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(3, new ThreadFactoryBuilder().setNameFormat("process-merge-request-%d").build());
 
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             int size = queue.size();
@@ -86,8 +87,9 @@ public class UserWrapBatchQueueService {
             if (size == 0) {
                 return;
             }
+            System.out.println("待合并请求数: " + queue.size());
             List<Request> list = new ArrayList<>();
-            System.out.println("合并了 [" + size + "] 个请求");
+            System.out.println(Thread.currentThread().getName() + "合并了 [" + size + "] 个请求");
             //将队列的请求消费到一个集合保存
             for (int i = 0; i < size; i++) {
                 // 后面的SQL语句是有长度限制的，所以还要做限制每次批量的数量,超过最大任务数，等下次执行
@@ -96,16 +98,13 @@ public class UserWrapBatchQueueService {
                 }
             }
             //拿到我们需要去数据库查询的特征,保存为集合
-            List<Request> userReqs = new ArrayList<>();
-            for (Request request : list) {
-                userReqs.add(request);
-            }
+            List<Request> userReqs = new ArrayList<>(list);
             //将参数传入service处理, 这里是本地服务，也可以把userService 看成RPC之类的远程调用
-            Map<String, Users> response = userService.queryUserByIdBatchQueue(userReqs);
+            Map<String, Optional<Users>> response = userService.queryUserByIdBatchQueue(userReqs);
             for (Request userReq : userReqs) {
                 // 这里再把结果放到队列里
-                Users users = response.get(userReq.getRequestId());
-                userReq.usersQueue.offer(users);
+                Optional<Users> user = response.get(userReq.getRequestId());
+                userReq.usersQueue.offer(user);
             }
 
         }, 100, 10, TimeUnit.MILLISECONDS);
@@ -118,13 +117,15 @@ public class UserWrapBatchQueueService {
         // 这里用UUID做请求id
         request.requestId = UUID.randomUUID().toString().replace("-", "");
         request.userId = userId;
-        LinkedBlockingQueue<Users> usersQueue = new LinkedBlockingQueue<>();
+        LinkedBlockingQueue<Optional<Users>> usersQueue = new LinkedBlockingQueue<>(1);
         request.usersQueue = usersQueue;
         //将对象传入队列
         queue.offer(request);
+        System.out.println("队列大小: " + queue.size());
         //取出元素时，如果队列为空，给定阻塞多少毫秒再队列取值，这里是3秒
         try {
-            return usersQueue.poll(3000,TimeUnit.MILLISECONDS);
+            Optional<Users> user = usersQueue.poll(15000, TimeUnit.MILLISECONDS);
+            return Objects.requireNonNull(user).orElse(null);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -1,7 +1,7 @@
 package com.springboot.sample.service.impl;
 
 import com.springboot.sample.bean.Users;
-import com.springboot.sample.mapper.UsersMapper;
+import com.springboot.sample.mapper.UsersDao;
 import com.springboot.sample.service.TestExceptionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 public class TestExceptionServiceImpl implements TestExceptionService {
 
     @Resource
-    private UsersMapper usersMapper;
+    private UsersDao usersDao;
 
     /***
      * Transaction rolled back because it has been marked as rollback-only
@@ -23,7 +23,7 @@ public class TestExceptionServiceImpl implements TestExceptionService {
     public void test() {
         Users entity = new Users();
         entity.setName("李四啊");
-        usersMapper.insert(entity);
+        usersDao.save(entity);
         System.out.println(entity.getId());
         if (true){
             throw new RuntimeException("测试事务回滚");

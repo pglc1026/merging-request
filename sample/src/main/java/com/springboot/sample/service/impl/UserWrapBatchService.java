@@ -35,7 +35,7 @@ public class UserWrapBatchService {
         // 参数
         Long userId;
         //TODO Java 8 的 CompletableFuture 并没有 timeout 机制
-        CompletableFuture<Users> completableFuture;
+        CompletableFuture<Optional<Users>> completableFuture;
 
         public String getRequestId() {
             return requestId;
@@ -53,11 +53,11 @@ public class UserWrapBatchService {
             this.userId = userId;
         }
 
-        public CompletableFuture getCompletableFuture() {
+        public CompletableFuture<Optional<Users>> getCompletableFuture() {
             return completableFuture;
         }
 
-        public void setCompletableFuture(CompletableFuture completableFuture) {
+        public void setCompletableFuture(CompletableFuture<Optional<Users>> completableFuture) {
             this.completableFuture = completableFuture;
         }
     }
@@ -71,7 +71,7 @@ public class UserWrapBatchService {
     而LinkedBlockingQueue实现的队列中的锁是分离的，其添加采用的是putLock，移除采用的则是takeLock，这样能大大提高队列的吞吐量，
     也意味着在高并发的情况下生产者和消费者可以并行地操作队列中的数据，以此来提高整个队列的并发性能。
      */
-    private final Queue<Request> queue = new LinkedBlockingQueue();
+    private final Queue<Request> queue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     public void init() {
@@ -94,15 +94,12 @@ public class UserWrapBatchService {
                 }
             }
             //拿到我们需要去数据库查询的特征,保存为集合
-            List<Request> userReqs = new ArrayList<>();
-            for (Request request : list) {
-                userReqs.add(request);
-            }
-            //将参数传入service处理, 这里是本地服务，也可以把userService 看成RPC之类的远程调用
-            Map<String, Users> response = userService.queryUserByIdBatch(userReqs);
+            List<Request> userReqs = new ArrayList<>(list);
+            // 将参数传入service处理, 这里是本地服务，也可以把userService 看成RPC之类的远程调用
+            Map<String, Optional<Users>> response = userService.queryUserByIdBatch(userReqs);
             //将处理结果返回各自的请求
             for (Request request : list) {
-                Users result = response.get(request.requestId);
+                Optional<Users> result = response.get(request.requestId);
                 request.completableFuture.complete(result);    //completableFuture.complete方法完成赋值,这一步执行完毕,下面future.get()阻塞的请求可以继续执行了
             }
         }, 100, 10, TimeUnit.MILLISECONDS);
@@ -115,16 +112,15 @@ public class UserWrapBatchService {
         // 这里用UUID做请求id
         request.requestId = UUID.randomUUID().toString().replace("-", "");
         request.userId = userId;
-        CompletableFuture<Users> future = new CompletableFuture<>();
+        CompletableFuture<Optional<Users>> future = new CompletableFuture<>();
         request.completableFuture = future;
         //将对象传入队列
         queue.offer(request);
         //如果这时候没完成赋值,那么就会阻塞,直到能够拿到值
         try {
-            return future.get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+            Optional<Users> user = future.get();
+            return user.orElse(null);
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
         return null;

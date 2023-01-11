@@ -1,8 +1,7 @@
 package com.springboot.sample;
 
 import com.springboot.sample.service.UserService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -14,7 +13,6 @@ import java.util.concurrent.RecursiveTask;
 /***
  * ForkJoin测试，寻找最大数
  * */
-@RunWith(SpringRunner.class)
 @SpringBootTest/*(classes = SampleApplication.class,webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)*/
 public class ForkJoinTest {
 

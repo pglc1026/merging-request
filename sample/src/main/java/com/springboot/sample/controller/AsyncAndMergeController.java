@@ -72,12 +72,11 @@ public class AsyncAndMergeController {
      * */
     @RequestMapping("/merge")
     public Callable<Users> merge(Long userId) {
-        return new Callable<Users>() {
-            @Override
-            public Users call() throws Exception {
+        System.out.println(Thread.currentThread().getName() + " tomcat处理请求, userId: " + userId);
+        return () -> {
+            System.out.println(Thread.currentThread().getName() + " 异步处理请求, userId: " + userId);
 //                return userBatchService.queryUser(userId);
-                return userWrapBatchQueueService.queryUser(userId);
-            }
+            return userWrapBatchQueueService.queryUser(userId);
         };
     }
 

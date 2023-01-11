@@ -1,7 +1,7 @@
 package com.springboot.sample.service.impl;
 
 import com.springboot.sample.bean.Users;
-import com.springboot.sample.mapper.UsersMapper;
+import com.springboot.sample.mapper.UsersDao;
 import com.springboot.sample.service.TestExceptionService;
 import com.springboot.sample.service.TestService;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 public class TestServiceImpl implements TestService {
 
     @Resource
-    private UsersMapper usersMapper;
+    private UsersDao usersDao;
 
     @Resource
     private TestExceptionService testExceptionService;
@@ -21,10 +21,9 @@ public class TestServiceImpl implements TestService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void testInsert() {
-//                int a = 1 / 0;
         Users entity = new Users();
         entity.setName("张三啊");
-        usersMapper.insert(entity);
+        usersDao.save(entity);
         System.out.println(entity.getId());
         try {
             testExceptionService.test();
@@ -32,9 +31,6 @@ public class TestServiceImpl implements TestService {
             e.printStackTrace();
         }
 
-        /*if (true){
-            throw new RuntimeException("测试事务回滚");
-        }*/
     }
 
     @Override
